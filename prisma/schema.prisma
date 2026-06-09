@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  password      String
+  role          String         @default("BUYER") // BUYER, ADMIN
+  points        Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orders        Order[]
+  reviews       Review[]
+  wishlist      WishlistItem[]
+  addresses     Address[]
+}
+
+model Address {
+  id         String   @id @default(uuid())
+  name       String   // e.g. "Fatima Khan (Home)"
+  street     String
+  city       String
+  province   String
+  postalCode String
+  phone      String
+  isDefault  Boolean  @default(false)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders     Order[]
+}
+
+model Product {
+  id             String         @id @default(uuid())
+  name           String
+  description    String
+  price          Float
+  discount       Float          @default(0.0) // Discount amount in PKR
+  sku            String         @unique
+  category       String
+  inventory      Int            @default(0)
+  rating         Float          @default(0.0)
+  images         String         // Comma-separated list of image URLs/paths
+  specifications String         // JSON string representing custom attributes (materials, weight, sizes, colors)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  orderItems     OrderItem[]
+  reviews        Review[]
+  wishlistItems  WishlistItem[]
+}
+
+model Order {
+  id             String      @id @default(uuid())
+  orderNumber    String      @unique // e.g. "MN-1001"
+  total          Float
+  subtotal       Float
+  tax            Float       // GST 18%
+  shippingFee    Float
+  discountAmount Float       @default(0.0)
+  couponCode     String?
+  status         String      @default("PENDING") // PENDING, PROCESSING, SHIPPED, DELIVERED, CANCELLED
+  paymentStatus  String      @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
+  paymentMethod  String      // COD, BANK_TRANSFER, PAYFAST, JAZZCASH, EASYPAISA
+  paymentDetails String?     // e.g. Transaction ID, Bank reference
+  shippingMethod String      // TCS, LEOPARDS, TRAX
+  trackingNumber String?
+  notes          String?
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addressId      String
+  address        Address     @relation(fields: [addressId], references: [id])
+  items          OrderItem[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model OrderItem {
+  id            String   @id @default(uuid())
+  quantity      Int
+  price         Float    // Price at the time of purchase
+  selectedSize  String?
+  selectedColor String?
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  rating     Int
+  comment    String
+  isApproved Boolean  @default(true)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model Coupon {
+  id            String    @id @default(uuid())
+  code          String    @unique
+  discountType  String    // PERCENTAGE or FIXED
+  discountValue Float
+  minOrderValue Float     @default(0.0)
+  active        Boolean   @default(true)
+  expiresAt     DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
