@@ -40,6 +40,16 @@ async function main() {
     },
   });
 
+  const hashedZaibPassword = await bcrypt.hash("Zaibzee511", 10);
+  const zaibUser = await prisma.user.create({
+    data: {
+      email: "keerioaurangzaib5@gmail.com",
+      name: "Aurangzaib Keerio",
+      password: hashedZaibPassword,
+      role: "ADMIN",
+    },
+  });
+
   console.log("👥 Users created successfully.");
 
   // Create Addresses
@@ -66,6 +76,19 @@ async function main() {
       phone: "04235712345",
       isDefault: false,
       userId: buyer.id,
+    },
+  });
+
+  const zaibAddress = await prisma.address.create({
+    data: {
+      name: "Aurangzaib Keerio (Home)",
+      street: "House 45-B, Sector D, Phase 1, DHA",
+      city: "Karachi",
+      province: "Sindh",
+      postalCode: "75500",
+      phone: "03331234567",
+      isDefault: true,
+      userId: zaibUser.id,
     },
   });
 
